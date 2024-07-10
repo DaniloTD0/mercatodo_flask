@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ventas</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Ventas</h1>
+        
+        <form method="POST" action="{{ url_for('ventas') }}" class="mb-4" id="filtrarProductosForm">
+            <div class="form-row">
+                <div class="col">
+                    <select class="form-control" name="categoria_id" onchange="document.getElementById('filtrarProductosForm').submit()">
+                        <option value="">Seleccionar Categoría</option>
+                        {% for categoria in categorias %}
+                            <option value="{{ categoria.ID_categoria_producto }}" {% if selected_categoria_id and selected_categoria_id == categoria.ID_categoria_producto %}selected{% endif %}>{{ categoria.nombre_categoria }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <input type="text" class="form-control" name="search_query" placeholder="Buscar Producto" value="{{ search_query }}">
+                </div>
+                <div class="col">
+                    <button type="submit" class="btn btn-primary">Buscar</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Nombre Producto</th>
+                        <th>Descripción</th>
+                        <th>Valor</th>
+                        <th>Stock</th>
+                        <th>Cantidad</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{ producto.nombre_producto }}</td>
+                        <td>{{ producto.descripcion_producto }}</td>
+                        <td>{{ producto.valor_producto }}</td>
+                        <td>{{ producto.stock }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('ventas') }}#tabla-ventas">
+                                <input type="hidden" name="id_producto" value="{{ producto.ID_producto }}">
+                                <input type="number" name="cantidad" min="1" max="{{ producto.stock }}" class="form-control" required>
+                        </td>
+                        <td>
+                            <button type="submit" class="btn btn-success">Añadir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h2 class="my-4">Detalles de Venta</h2>
+        <div class="table-responsive">
+            <table class="table table-bordered" id="tabla-ventas">
+                <thead>
+                    <tr>
+                        <th>ID Venta</th>
+                        <th>Nombre Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Total</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles_venta %}
+                    <tr>
+                        <td>{{ detalle.ID_venta }}</td>
+                        <td>{{ detalle.nombre_producto }}</td>
+                        <td>{{ detalle.cantidad }}</td>
+                        <td>{{ detalle.cantidad * detalle.valor_venta_producto }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('editar_producto', id=detalle.ID_detalle_venta) }}" class="d-inline">
+                                <input type="number" name="cantidad" min="1" class="form-control" value="{{ detalle.cantidad }}" required>
+                                <button type="submit" class="btn btn-warning">Actualizar</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('eliminar_producto', id=detalle.ID_detalle_venta) }}" class="d-inline">
+                                <button type="submit" class="btn btn-danger">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="my-4">Total: {{ total_venta }}</h3>
+
+        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#cancelarModal">Cancelar Venta</button>
+        <button type="button" class="btn btn-success" data-toggle="modal" data-target="#finalizarModal">Finalizar Venta</button>
+    </div>
+
+    <!-- Modal Cancelar Venta -->
+    <div class="modal fade" id="cancelarModal" tabindex="-1" aria-labelledby="cancelarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelarModalLabel">Cancelar Venta</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas cancelar esta venta?
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" action="{{ url_for('cancelar_venta') }}">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                        <button type="submit" class="btn btn-danger">Sí, cancelar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Finalizar Venta -->
+    <div class="modal fade" id="finalizarModal" tabindex="-1" aria-labelledby="finalizarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="finalizarModalLabel">Finalizar Venta</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas finalizar esta venta?
+                </div>
+                <div class="modal-footer">
+                    <form method="POST" action="{{ url_for('finalizar_venta') }}">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+                        <button type="submit" class="btn btn-success">Sí, finalizar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
